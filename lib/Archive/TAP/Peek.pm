@@ -12,9 +12,11 @@ use TAP::Parser;
 use feature qw( say );
 
 sub new {
-    my $self = shift;
+    my $class = shift;
 
     my %args = @_;
+
+    my $self = { error_found => 0 };
 
     die "Parameter 'archive' needed" unless exists $args{archive};
 
@@ -50,19 +52,40 @@ sub new {
         
         while ( my $result = $parser->next ) {
             # do whatever you like with the $result, like print it back out
-            print $result->as_string, "\n";
+            my $line = $result->as_string;
+
+            if ($line =~ /^ok/) {
+                # everything is fine... keep going on
+            }
+            elsif ($line =~ /^not ok/) {
+                # oops! error.
+                $self->{error_found} = 1;
+
+                # we break here... since we already know there are failures
+                last;
+            }
+            else {
+                # some other lines we don't need
+            }
         }
     
     }
 
+    bless ($self, $class);
 
-    my $ref  = {};
-
-    bless ($ref, $self);
-
-    return $ref;
+    return $self;
 }
 
+sub all_ok {
+    my $self = shift;
+
+    if( $self->{error_found} ) {
+        return;
+    }
+    else {
+        return 1;
+    }
+}
 
 1;
 
@@ -88,9 +111,16 @@ This modul can be of help for you if you have TAP archives (e.g. created with C<
 
 =head2 all_ok
 
+Returns a true value if no errors where found in the archive, otherwise false.
+
+ if( $peek->all_ok ) {
+     print "No errors in archive\n";
+ }
+
 =head1 BUGS AND LIMITATIONS
 
 Archive gets unpacked into a temproary directory.
+Could maybe be made on-the-fly with L<Archive::Peek>.
 
 =head1 SEE ALSO
 
