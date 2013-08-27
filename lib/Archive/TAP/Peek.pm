@@ -1,0 +1,104 @@
+# ABSTRACT: Look into TAP-Archives
+
+package Archive::TAP::Peek;
+
+use strict;
+use warnings;
+
+use Archive::Extract;
+use File::Temp qw( tempdir );
+use TAP::Parser;
+
+use feature qw( say );
+
+sub new {
+    my $self = shift;
+
+    my %args = @_;
+
+    die "Parameter 'archive' needed" unless exists $args{archive};
+
+    die "$args{archive} not found" unless -f $args{archive};
+
+    my $ae = Archive::Extract->new( archive => $args{archive},
+                                    type => 'tgz'
+                                  );
+    
+    die "$args{archive} is not of type 'tgz'" unless $ae->is_tgz;
+    
+    my $tmpdir = tempdir( CLEANUP => 1 );
+    
+    $ae->extract( to => $tmpdir ) or die $ae->error;
+    
+    my $files = $ae->files;
+    
+    my $outdir = $ae->extract_path;
+    
+    foreach my $f (@{$files}) {
+    
+        next unless ( $f =~ /.*\.t$/);
+    
+        # code from here:
+        # http://stackoverflow.com/questions/13781443/capture-and-split-tap-output-result
+        my $tap_file = $outdir . '/' . $f; 
+        open my $tap_fh, $tap_file or die $!; 
+        
+        # Can't just pass in the .t file, it will try to execute it.
+        my $parser = TAP::Parser->new({
+            source => $tap_fh
+        }); 
+        
+        while ( my $result = $parser->next ) {
+            # do whatever you like with the $result, like print it back out
+            print $result->as_string, "\n";
+        }
+    
+    }
+
+
+    my $ref  = {};
+
+    bless ($ref, $self);
+
+    return $ref;
+}
+
+
+1;
+
+__END__
+
+=encoding utf8
+
+=head1 ABOUT
+
+This modul can be of help for you if you have TAP archives (e.g. created with C<prove -a> and now you wish to know something about the outcomes of the test-results inside the archive.
+
+=head1 SYNOPSIS
+
+ use Archive::TAP::Peek;
+
+ my $peek = Archive::TAP::Peek->new( archive => 'tests.tar.gz' );
+
+ if( $peek->all_ok ) {
+     print "No errors in archive\n";
+ }
+
+=head1 METHODS
+
+=head2 all_ok
+
+=head1 BUGS AND LIMITATIONS
+
+Archive gets unpacked into a temproary directory.
+
+=head1 SEE ALSO
+
+=over
+
+=item *
+
+L<Test::Harness>
+
+=back
+
