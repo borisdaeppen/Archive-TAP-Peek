@@ -9,8 +9,6 @@ use Archive::Extract;
 use File::Temp qw( tempdir );
 use TAP::Parser;
 
-use feature qw( say );
-
 sub new {
     my $class = shift;
 
