@@ -93,7 +93,9 @@ __END__
 
 =head1 ABOUT
 
-This modul can be of help for you if you have TAP archives (e.g. created with C<prove -a> and now you wish to know something about the outcomes of the test-results inside the archive.
+This is a software library for the I<perl programming language>.
+
+The modul can be of help for you if you have TAP archives (e.g. created with C<prove -a> and now you wish to know something about the outcomes of the test-results inside the archive.
 
 =head1 SYNOPSIS
 
